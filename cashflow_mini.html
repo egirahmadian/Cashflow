@@ -151,7 +151,10 @@ body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,
     <div class="card">
       <div class="card-title">⚙️ Tools</div>
       <div class="actions">
-        <button class="btn secondary" onclick="copyFromPrev()">📋 Copy from prev month</button>
+        <button class="btn secondary" onclick="copyFromPrev()">📋 Copy from prev</button>
+        <button class="btn secondary" onclick="seedCurrentMonth(false)">✨ Load defaults</button>
+      </div>
+      <div class="actions">
         <button class="btn secondary" onclick="exportData()">📤 Export</button>
         <button class="btn secondary" onclick="document.getElementById('import').click()">📥 Import</button>
         <input type="file" id="import" accept=".json" style="display:none" onchange="importData(event)"/>
@@ -223,6 +226,51 @@ const CATEGORIES={
 };
 const STORAGE_KEY='cashflow_mini_v1';
 
+// Seed data ported from cashflow_egi.html (DEFAULT_INC + DEFAULT_ACCOUNTS).
+// Categories mapped to mini's category set.
+const DEFAULT_INCOME=[
+  {name:"Gaji Utama",amount:45500000},
+];
+const DEFAULT_EXPENSES=[
+  {name:"House Rent",amount:2000000,cat:"mortgage"},
+  {name:"Credit Card",amount:9500000,cat:"creditcard"},
+  {name:"Kontrakan",amount:2000000,cat:"mortgage"},
+  {name:"Uang Weekend",amount:1600000,cat:"household"},
+  {name:"Servis Mobil & Motor",amount:500000,cat:"transport"},
+  {name:"Cash Darurat",amount:500000,cat:"savings"},
+  {name:"Pegangan Egi",amount:500000,cat:"other"},
+  {name:"Kurban",amount:330000,cat:"family"},
+  {name:"STNK Mobil",amount:300000,cat:"transport"},
+  {name:"Belanja Baju",amount:400000,cat:"household"},
+  {name:"Snack",amount:400000,cat:"food"},
+  {name:"Camilan Egi",amount:400000,cat:"food"},
+  {name:"Pulsa Egi",amount:200000,cat:"utilities"},
+  {name:"Bensin Mobil",amount:800000,cat:"transport"},
+  {name:"Bensin Motor",amount:150000,cat:"transport"},
+  {name:"Jumat Berkah",amount:155000,cat:"family"},
+  {name:"Chosen & Chika",amount:1200000,cat:"pet"},
+  {name:"Pregnancy Control",amount:2500000,cat:"health"},
+  {name:"Nafkah Miyut",amount:3000000,cat:"family"},
+  {name:"Paylater Shopee",amount:1500000,cat:"creditcard"},
+  {name:"iCloud",amount:150000,cat:"utilities"},
+  {name:"Pulsa Miyut",amount:100000,cat:"utilities"},
+  {name:"Dr Zlim",amount:300000,cat:"health"},
+  {name:"Makan & Sayur",amount:1800000,cat:"food"},
+  {name:"Listrik",amount:600000,cat:"utilities"},
+  {name:"Wifi",amount:280000,cat:"utilities"},
+  {name:"Aqua",amount:160000,cat:"utilities"},
+  {name:"Gas",amount:75000,cat:"utilities"},
+  {name:"Sabun/Shampoo/Deterjen",amount:50000,cat:"household"},
+  {name:"Netflix",amount:35000,cat:"fun"},
+  {name:"IPL",amount:60000,cat:"household"},
+  {name:"Other Household",amount:450000,cat:"household"},
+  {name:"Transfer to Ibu",amount:3500000,cat:"family"},
+  {name:"Tokopedia",amount:2100000,cat:"household"},
+  {name:"Car Payment",amount:4700000,cat:"mortgage"},
+];
+// Map egi-format category keys → mini-format category keys
+const CAT_REMAP={wifey:'family',future:'savings'};
+
 let state={data:{},curYear:new Date().getFullYear(),curMonth:new Date().getMonth(),tab:'edit'};
 
 function key(y,m){return `${y}-${String(m+1).padStart(2,'0')}`}
@@ -260,6 +308,46 @@ function save(){
   }
 }
 function load(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)state.data=JSON.parse(r)}catch(e){}}
+
+function seedCurrentMonth(force){
+  const k=curKey();
+  if(!force&&state.data[k]&&(state.data[k].income.length||state.data[k].expenses.length)){
+    if(!confirm('This month already has data. Replace it with defaults?'))return;
+  }
+  state.data[k]={
+    income:DEFAULT_INCOME.map(i=>({id:newId(),...i})),
+    expenses:DEFAULT_EXPENSES.map(i=>({id:newId(),...i})),
+  };
+  save();render();toast('Defaults loaded ✓');
+}
+
+function isEgiBackup(d){
+  if(!d||typeof d!=='object')return false;
+  const k=Object.keys(d);if(!k.length)return false;
+  const sample=d[k[0]];
+  return sample&&(Array.isArray(sample.accounts)||Array.isArray(sample.inc)||Array.isArray(sample.incomeSources));
+}
+function convertEgiBackup(eg){
+  const out={};
+  for(const [k,md] of Object.entries(eg)){
+    let nk=k;
+    if(/^cf_\d{4}_\d{2}$/.test(k)){const p=k.split('_');nk=`${p[1]}-${p[2]}`}
+    else if(/^\d{4}-\d{2}$/.test(k))nk=k;
+    const incSrc=md.inc||md.incomeSources||(md.income?[{name:'Income',amount:md.income}]:[]);
+    const income=incSrc.map(i=>({id:newId(),name:i.name||'',amount:+i.amount||0}));
+    const expenses=[];
+    (md.accounts||[]).forEach(a=>{
+      (a.items||[]).forEach(i=>{
+        let cat=i.cat||'other';
+        cat=CAT_REMAP[cat]||cat;
+        if(!CATEGORIES[cat])cat='other';
+        expenses.push({id:newId(),name:i.name||'',amount:+i.amount||0,cat});
+      });
+    });
+    out[nk]={income,expenses};
+  }
+  return out;
+}
 
 function toast(msg){
   const t=document.getElementById('toast');
@@ -493,8 +581,13 @@ function importData(e){
     try{
       const d=JSON.parse(ev.target.result);
       if(typeof d!=='object'||Array.isArray(d))throw 0;
-      if(!confirm('Replace all current data with imported file?'))return;
-      state.data=d;save();render();toast('Imported ✓');
+      const isEgi=isEgiBackup(d);
+      const msg=isEgi
+        ?'Detected backup from cashflow_egi.html. Import & convert? (replaces current data)'
+        :'Replace all current data with imported file?';
+      if(!confirm(msg))return;
+      state.data=isEgi?convertEgiBackup(d):d;
+      save();render();toast(isEgi?'Imported (egi format) ✓':'Imported ✓');
     }catch(err){alert('Invalid file format')}
   };
   r.readAsText(f);
@@ -508,6 +601,14 @@ function render(){
 }
 
 load();
+// First-time bootstrap: if storage is completely empty, seed current month with Egi defaults
+if(!Object.keys(state.data).length){
+  state.data[curKey()]={
+    income:DEFAULT_INCOME.map(i=>({id:newId(),...i})),
+    expenses:DEFAULT_EXPENSES.map(i=>({id:newId(),...i})),
+  };
+  save();
+}
 render();
 </script>
 </body>
