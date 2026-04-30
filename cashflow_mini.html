@@ -46,6 +46,9 @@ body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,
 .row .amt{background:var(--surface2);border:1px solid var(--border);color:var(--text);width:120px;padding:7px 9px;border-radius:8px;font-size:13px;text-align:right;outline:none;font-variant-numeric:tabular-nums}
 .row .amt:focus{border-color:var(--accent)}
 .row .cat{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 6px;border-radius:8px;font-size:12px;outline:none;max-width:115px}
+.row.exp{flex-direction:column;align-items:stretch;gap:6px;padding:10px 0}
+.exp-line{display:flex;align-items:center;gap:6px}
+.exp-line.tags select{flex:1;min-width:0;max-width:none;font-size:11px;padding:6px 4px}
 .del{background:0;border:0;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px}
 .del:hover{color:var(--warn);background:rgba(255,107,107,.1)}
 .empty{font-size:12px;color:var(--muted);padding:12px 0;text-align:center}
@@ -186,6 +189,16 @@ body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,
     </div>
 
     <div class="card">
+      <div class="card-title">🏦 Transfer Plan (by Bank)</div>
+      <div id="bank-bars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👤 By PIC</div>
+      <div id="pic-bars"></div>
+    </div>
+
+    <div class="card">
       <div class="card-title">📊 Spending by Category</div>
       <div id="cat-bars"></div>
     </div>
@@ -226,50 +239,74 @@ const CATEGORIES={
 };
 const STORAGE_KEY='cashflow_mini_v1';
 
+// Banks = transfer destinations
+const BANKS={
+  jago_egi:    {label:"Jago - Egi",     short:"Jago",    icon:"🐉", color:"#E84393"},
+  permata_egi: {label:"Permata - Egi",  short:"Permata", icon:"🏦", color:"#E8A020"},
+  mandiri_egi: {label:"Mandiri - Egi",  short:"Mandiri", icon:"🏛️", color:"#FB923C"},
+  jago_mila:   {label:"Jago - Mila",    short:"Jago",    icon:"🐉", color:"#F472B6"},
+  mandiri_mila:{label:"Mandiri - Mila", short:"Mandiri", icon:"🏛️", color:"#A78BFA"},
+  bsi_ibu:     {label:"BSI - Ibu",      short:"BSI",     icon:"☪️", color:"#00B050"},
+};
+// PIC = person responsible
+const PICS={
+  egi: {label:"Egi",  icon:"👤", color:"#4A90FF"},
+  mila:{label:"Mila", icon:"👤", color:"#F472B6"},
+};
+
 // Seed data ported from cashflow_egi.html (DEFAULT_INC + DEFAULT_ACCOUNTS).
-// Categories mapped to mini's category set.
+// Categories mapped to mini's category set; bank + pic added per item.
 const DEFAULT_INCOME=[
   {name:"Gaji Utama",amount:45500000},
 ];
 const DEFAULT_EXPENSES=[
-  {name:"House Rent",amount:2000000,cat:"mortgage"},
-  {name:"Credit Card",amount:9500000,cat:"creditcard"},
-  {name:"Kontrakan",amount:2000000,cat:"mortgage"},
-  {name:"Uang Weekend",amount:1600000,cat:"household"},
-  {name:"Servis Mobil & Motor",amount:500000,cat:"transport"},
-  {name:"Cash Darurat",amount:500000,cat:"savings"},
-  {name:"Pegangan Egi",amount:500000,cat:"other"},
-  {name:"Kurban",amount:330000,cat:"family"},
-  {name:"STNK Mobil",amount:300000,cat:"transport"},
-  {name:"Belanja Baju",amount:400000,cat:"household"},
-  {name:"Snack",amount:400000,cat:"food"},
-  {name:"Camilan Egi",amount:400000,cat:"food"},
-  {name:"Pulsa Egi",amount:200000,cat:"utilities"},
-  {name:"Bensin Mobil",amount:800000,cat:"transport"},
-  {name:"Bensin Motor",amount:150000,cat:"transport"},
-  {name:"Jumat Berkah",amount:155000,cat:"family"},
-  {name:"Chosen & Chika",amount:1200000,cat:"pet"},
-  {name:"Pregnancy Control",amount:2500000,cat:"health"},
-  {name:"Nafkah Miyut",amount:3000000,cat:"family"},
-  {name:"Paylater Shopee",amount:1500000,cat:"creditcard"},
-  {name:"iCloud",amount:150000,cat:"utilities"},
-  {name:"Pulsa Miyut",amount:100000,cat:"utilities"},
-  {name:"Dr Zlim",amount:300000,cat:"health"},
-  {name:"Makan & Sayur",amount:1800000,cat:"food"},
-  {name:"Listrik",amount:600000,cat:"utilities"},
-  {name:"Wifi",amount:280000,cat:"utilities"},
-  {name:"Aqua",amount:160000,cat:"utilities"},
-  {name:"Gas",amount:75000,cat:"utilities"},
-  {name:"Sabun/Shampoo/Deterjen",amount:50000,cat:"household"},
-  {name:"Netflix",amount:35000,cat:"fun"},
-  {name:"IPL",amount:60000,cat:"household"},
-  {name:"Other Household",amount:450000,cat:"household"},
-  {name:"Transfer to Ibu",amount:3500000,cat:"family"},
-  {name:"Tokopedia",amount:2100000,cat:"household"},
-  {name:"Car Payment",amount:4700000,cat:"mortgage"},
+  {name:"House Rent",amount:2000000,cat:"mortgage",bank:"permata_egi",pic:"egi"},
+  {name:"Credit Card",amount:9500000,cat:"creditcard",bank:"permata_egi",pic:"egi"},
+  {name:"Kontrakan",amount:2000000,cat:"mortgage",bank:"jago_egi",pic:"egi"},
+  {name:"Uang Weekend",amount:1600000,cat:"household",bank:"jago_egi",pic:"egi"},
+  {name:"Servis Mobil & Motor",amount:500000,cat:"transport",bank:"jago_egi",pic:"egi"},
+  {name:"Cash Darurat",amount:500000,cat:"savings",bank:"jago_egi",pic:"egi"},
+  {name:"Pegangan Egi",amount:500000,cat:"other",bank:"jago_egi",pic:"egi"},
+  {name:"Kurban",amount:330000,cat:"family",bank:"jago_egi",pic:"egi"},
+  {name:"STNK Mobil",amount:300000,cat:"transport",bank:"jago_egi",pic:"egi"},
+  {name:"Belanja Baju",amount:400000,cat:"household",bank:"jago_egi",pic:"egi"},
+  {name:"Snack",amount:400000,cat:"food",bank:"jago_egi",pic:"egi"},
+  {name:"Camilan Egi",amount:400000,cat:"food",bank:"jago_egi",pic:"egi"},
+  {name:"Pulsa Egi",amount:200000,cat:"utilities",bank:"jago_egi",pic:"egi"},
+  {name:"Bensin Mobil",amount:800000,cat:"transport",bank:"jago_egi",pic:"egi"},
+  {name:"Bensin Motor",amount:150000,cat:"transport",bank:"jago_egi",pic:"egi"},
+  {name:"Jumat Berkah",amount:155000,cat:"family",bank:"jago_egi",pic:"egi"},
+  {name:"Chosen & Chika",amount:1200000,cat:"pet",bank:"jago_egi",pic:"egi"},
+  {name:"Pregnancy Control",amount:2500000,cat:"health",bank:"jago_egi",pic:"egi"},
+  {name:"Nafkah Mila",amount:3000000,cat:"family",bank:"mandiri_mila",pic:"mila"},
+  {name:"Paylater Shopee",amount:1500000,cat:"creditcard",bank:"mandiri_mila",pic:"mila"},
+  {name:"iCloud",amount:150000,cat:"utilities",bank:"mandiri_mila",pic:"mila"},
+  {name:"Pulsa Mila",amount:100000,cat:"utilities",bank:"mandiri_mila",pic:"mila"},
+  {name:"Dr Zlim",amount:300000,cat:"health",bank:"mandiri_mila",pic:"mila"},
+  {name:"Makan & Sayur",amount:1800000,cat:"food",bank:"mandiri_egi",pic:"egi"},
+  {name:"Listrik",amount:600000,cat:"utilities",bank:"mandiri_egi",pic:"egi"},
+  {name:"Wifi",amount:280000,cat:"utilities",bank:"mandiri_egi",pic:"egi"},
+  {name:"Aqua",amount:160000,cat:"utilities",bank:"mandiri_egi",pic:"egi"},
+  {name:"Gas",amount:75000,cat:"utilities",bank:"mandiri_egi",pic:"egi"},
+  {name:"Sabun/Shampoo/Deterjen",amount:50000,cat:"household",bank:"mandiri_egi",pic:"egi"},
+  {name:"Netflix",amount:35000,cat:"fun",bank:"mandiri_egi",pic:"egi"},
+  {name:"IPL",amount:60000,cat:"household",bank:"mandiri_egi",pic:"egi"},
+  {name:"Other Household",amount:450000,cat:"household",bank:"mandiri_egi",pic:"egi"},
+  {name:"Transfer to Ibu",amount:3500000,cat:"family",bank:"bsi_ibu",pic:"egi"},
+  {name:"Tokopedia",amount:2100000,cat:"household",bank:"mandiri_egi",pic:"egi"},
+  {name:"Car Payment",amount:4700000,cat:"mortgage",bank:"mandiri_egi",pic:"egi"},
 ];
 // Map egi-format category keys → mini-format category keys
 const CAT_REMAP={wifey:'family',future:'savings'};
+// Map egi account.id → bank/pic for import
+const EGI_ACCOUNT_MAP={
+  permata: {bank:'permata_egi',  pic:'egi'},
+  jago:    {bank:'jago_egi',     pic:'egi'},
+  miyut:   {bank:'mandiri_mila', pic:'mila'},
+  rt:      {bank:'mandiri_egi',  pic:'egi'},
+  ibu:     {bank:'bsi_ibu',      pic:'egi'},
+  mandiri: {bank:'mandiri_egi',  pic:'egi'},
+};
 
 let state={data:{},curYear:new Date().getFullYear(),curMonth:new Date().getMonth(),tab:'edit'};
 
@@ -337,11 +374,12 @@ function convertEgiBackup(eg){
     const income=incSrc.map(i=>({id:newId(),name:i.name||'',amount:+i.amount||0}));
     const expenses=[];
     (md.accounts||[]).forEach(a=>{
+      const acc=EGI_ACCOUNT_MAP[a.id]||{bank:'',pic:''};
       (a.items||[]).forEach(i=>{
         let cat=i.cat||'other';
         cat=CAT_REMAP[cat]||cat;
         if(!CATEGORIES[cat])cat='other';
-        expenses.push({id:newId(),name:i.name||'',amount:+i.amount||0,cat});
+        expenses.push({id:newId(),name:i.name||'',amount:+i.amount||0,cat,bank:acc.bank,pic:acc.pic});
       });
     });
     out[nk]={income,expenses};
@@ -378,7 +416,7 @@ function addIncome(){
   save();renderEdit();
 }
 function addExpense(){
-  getMonth().expenses.push({id:newId(),name:'',amount:0,cat:'other'});
+  getMonth().expenses.push({id:newId(),name:'',amount:0,cat:'other',bank:'',pic:''});
   save();renderEdit();
 }
 function delItem(arr,id){
@@ -431,17 +469,29 @@ function renderEdit(){
 
   const expList=document.getElementById('expense-list');
   expList.innerHTML=md.expenses.length?md.expenses.map(i=>`
-    <div class="row">
-      <input class="name" type="text" placeholder="e.g. Rent, Wifi"
-             value="${escapeHtml(i.name)}"
-             oninput="updItem('expenses','${i.id}','name',this.value)"/>
-      <select class="cat" onchange="updItem('expenses','${i.id}','cat',this.value)">
-        ${Object.entries(CATEGORIES).map(([k,c])=>`<option value="${k}" ${i.cat===k?'selected':''}>${c.icon} ${c.label}</option>`).join('')}
-      </select>
-      <input class="amt" type="number" inputmode="numeric" placeholder="0"
-             value="${i.amount||''}"
-             oninput="updItem('expenses','${i.id}','amount',this.value)"/>
-      <button class="del" onclick="delItem('expenses','${i.id}')">✕</button>
+    <div class="row exp">
+      <div class="exp-line">
+        <input class="name" type="text" placeholder="e.g. Rent, Wifi"
+               value="${escapeHtml(i.name)}"
+               oninput="updItem('expenses','${i.id}','name',this.value)"/>
+        <input class="amt" type="number" inputmode="numeric" placeholder="0"
+               value="${i.amount||''}"
+               oninput="updItem('expenses','${i.id}','amount',this.value)"/>
+        <button class="del" onclick="delItem('expenses','${i.id}')">✕</button>
+      </div>
+      <div class="exp-line tags">
+        <select onchange="updItem('expenses','${i.id}','cat',this.value)">
+          ${Object.entries(CATEGORIES).map(([k,c])=>`<option value="${k}" ${i.cat===k?'selected':''}>${c.icon} ${c.label}</option>`).join('')}
+        </select>
+        <select onchange="updItem('expenses','${i.id}','bank',this.value)">
+          <option value="" ${!i.bank?'selected':''}>🏦 Bank…</option>
+          ${Object.entries(BANKS).map(([k,b])=>`<option value="${k}" ${i.bank===k?'selected':''}>${b.icon} ${b.label}</option>`).join('')}
+        </select>
+        <select onchange="updItem('expenses','${i.id}','pic',this.value)">
+          <option value="" ${!i.pic?'selected':''}>👤 PIC…</option>
+          ${Object.entries(PICS).map(([k,p])=>`<option value="${k}" ${i.pic===k?'selected':''}>${p.icon} ${p.label}</option>`).join('')}
+        </select>
+      </div>
     </div>
   `).join(''):'<div class="empty">No expenses yet. Add one below.</div>';
 
@@ -491,6 +541,48 @@ function renderSummary(){
   document.getElementById('m-income-delta').innerHTML=prev?deltaPill(inc,pInc,false):'';
   document.getElementById('m-spent-delta').innerHTML=prev?deltaPill(spent,pExp,true):'';
   document.getElementById('m-surplus-delta').innerHTML=prev?deltaPill(sur,pSur,false):'';
+
+  // By Bank
+  const byBank={},bankUntagged=md.expenses.filter(e=>!e.bank&&+e.amount>0);
+  md.expenses.forEach(e=>{if(e.bank)byBank[e.bank]=(byBank[e.bank]||0)+(+e.amount||0)});
+  const bankEntries=Object.entries(byBank).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const bankTotal=bankEntries.reduce((s,[,v])=>s+v,0)||1;
+  const bankEl=document.getElementById('bank-bars');
+  bankEl.innerHTML=(bankEntries.length?bankEntries.map(([k,v])=>{
+    const b=BANKS[k]||{label:k,color:'#94A3B8',icon:'🏦'};
+    const pct=v/bankTotal*100;
+    return `
+      <div class="bar-row">
+        <div class="bar-info">
+          <div class="left"><span>${b.icon}</span><span class="lbl">${b.label}</span></div>
+          <div class="right">${fmtShort(v)} · ${pct.toFixed(1)}%</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${b.color}"></div></div>
+      </div>
+    `;
+  }).join(''):'<div class="empty">No banked expenses yet.</div>')+
+  (bankUntagged.length?`<div style="font-size:11px;color:var(--warn);margin-top:8px">⚠️ ${bankUntagged.length} expense${bankUntagged.length>1?'s':''} without a bank · ${fmtShort(bankUntagged.reduce((s,e)=>s+(+e.amount||0),0))}</div>`:'');
+
+  // By PIC
+  const byPic={},picUntagged=md.expenses.filter(e=>!e.pic&&+e.amount>0);
+  md.expenses.forEach(e=>{if(e.pic)byPic[e.pic]=(byPic[e.pic]||0)+(+e.amount||0)});
+  const picEntries=Object.entries(byPic).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const picTotal=picEntries.reduce((s,[,v])=>s+v,0)||1;
+  const picEl=document.getElementById('pic-bars');
+  picEl.innerHTML=(picEntries.length?picEntries.map(([k,v])=>{
+    const p=PICS[k]||{label:k,color:'#94A3B8',icon:'👤'};
+    const pct=v/picTotal*100;
+    return `
+      <div class="bar-row">
+        <div class="bar-info">
+          <div class="left"><span>${p.icon}</span><span class="lbl">${p.label}</span></div>
+          <div class="right">${fmtShort(v)} · ${pct.toFixed(1)}%</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${p.color}"></div></div>
+      </div>
+    `;
+  }).join(''):'<div class="empty">No PIC-tagged expenses yet.</div>')+
+  (picUntagged.length?`<div style="font-size:11px;color:var(--warn);margin-top:8px">⚠️ ${picUntagged.length} expense${picUntagged.length>1?'s':''} without a PIC · ${fmtShort(picUntagged.reduce((s,e)=>s+(+e.amount||0),0))}</div>`:'');
 
   // Categories
   const byCat={};
