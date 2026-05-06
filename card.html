@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Investor Card — Playground</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#070B14;--surface:#0F1623;--surface2:#162032;--border:#1E2D45;
+  --text:#E2EAF4;--muted:#5A7192;--accent:#00E5A0;--accent2:#3B82F6;
+  --warn:#F87171;--gold:#FBBF24
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  background:
+    radial-gradient(circle at 80% -10%,rgba(59,130,246,.18),transparent 50%),
+    radial-gradient(circle at 0% 100%,rgba(0,229,160,.12),transparent 45%),
+    var(--bg);
+  color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;
+  padding:32px 16px 80px
+}
+.mono{font-family:'JetBrains Mono',monospace}
+
+.page{max-width:480px;margin:0 auto}
+.page-head{text-align:center;margin-bottom:24px}
+.page-title{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-weight:700}
+.page-sub{font-size:22px;font-weight:800;margin-top:4px}
+
+/* ------ POKE CARD ------ */
+.poke-stage{display:flex;justify-content:center;margin-bottom:28px;perspective:1200px}
+.poke-card{
+  width:300px;border-radius:20px;padding:3px;
+  background:linear-gradient(135deg,var(--c1) 0%,var(--c2) 50%,var(--c1) 100%);
+  box-shadow:0 12px 38px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.05) inset;
+  position:relative;overflow:hidden;
+  transition:transform .25s ease;
+}
+.poke-card:hover{transform:translateY(-2px) rotateX(2deg)}
+.poke-card::before{
+  content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;
+  background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 7px);
+  opacity:.7;mix-blend-mode:overlay
+}
+.poke-card::after{
+  content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:conic-gradient(from 0deg,transparent 0%,rgba(255,255,255,.08) 25%,transparent 50%,rgba(255,255,255,.08) 75%,transparent 100%);
+  animation:spin 8s linear infinite;mix-blend-mode:overlay;opacity:.5
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.poke-inner{
+  position:relative;background:var(--surface);border-radius:17px;
+  padding:14px;display:flex;flex-direction:column;gap:11px;z-index:1
+}
+.poke-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.poke-name{font-size:17px;font-weight:800;line-height:1.15;letter-spacing:.2px}
+.poke-hp{
+  text-align:right;font-family:'JetBrains Mono',monospace;font-weight:800;
+  color:var(--c2);font-size:11px;line-height:1.1
+}
+.poke-hp .hp-num{font-size:18px;color:var(--text);display:block;margin-bottom:1px}
+
+.poke-portrait{
+  height:130px;border-radius:14px;
+  background:linear-gradient(135deg,var(--c1) 0%,var(--c2) 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:74px;line-height:1;
+  border:1px solid rgba(255,255,255,.1);
+  position:relative;overflow:hidden
+}
+.poke-portrait::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 28% 22%,rgba(255,255,255,.4),transparent 55%)
+}
+
+.poke-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.poke-stat{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 11px}
+.poke-stat-lbl{font-size:9px;color:var(--muted);letter-spacing:1.4px;text-transform:uppercase;font-weight:700}
+.poke-stat-val{font-size:16px;font-weight:800;font-family:'JetBrains Mono',monospace;margin-top:3px}
+
+.poke-breakdown-title{font-size:9px;color:var(--muted);letter-spacing:1.4px;text-transform:uppercase;font-weight:700;margin-top:2px}
+.poke-breakdown{display:flex;flex-wrap:wrap;gap:5px}
+.poke-chip{
+  font-size:10px;padding:3px 9px;border-radius:8px;background:var(--surface2);color:var(--muted);
+  font-weight:700;border:1px solid var(--border)
+}
+.poke-chip b{color:var(--text);font-family:'JetBrains Mono',monospace;margin-left:5px}
+.poke-chip.empty{color:var(--muted);font-style:italic;font-weight:500}
+
+.poke-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:9px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  border-top:1px dashed var(--border);padding-top:8px
+}
+.poke-edition{font-family:'JetBrains Mono',monospace}
+
+/* ------ EDIT PANEL ------ */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px}
+.panel-title{font-size:10px;color:var(--muted);letter-spacing:1.6px;text-transform:uppercase;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.panel-title .reset{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit}
+.panel-title .reset:active{color:var(--warn)}
+
+.field{margin-bottom:11px}
+.field:last-child{margin-bottom:0}
+.field-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px;display:block}
+.field-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  padding:10px 12px;border-radius:10px;font-family:inherit;font-size:14px;outline:none
+}
+.field-input.num{font-family:'JetBrains Mono',monospace}
+.field-input:focus{border-color:var(--accent)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.swatch-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.swatch{aspect-ratio:1/1;border-radius:8px;border:2px solid transparent;cursor:pointer;transition:transform .1s}
+.swatch.selected{border-color:var(--text);transform:scale(1.08)}
+.swatch:active{transform:scale(.96)}
+
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.emoji-pick{
+  aspect-ratio:1/1;border-radius:8px;background:var(--surface2);border:2px solid transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px
+}
+.emoji-pick.selected{border-color:var(--accent);transform:scale(1.05)}
+
+.chip-list{display:flex;flex-direction:column;gap:6px}
+.chip-row{display:flex;gap:6px;align-items:center}
+.chip-row .field-input{flex:1}
+.chip-row .field-input.count{flex:0 0 70px;text-align:center}
+.chip-del{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:6px 8px}
+.chip-del:active{color:var(--warn)}
+.chip-add{
+  width:100%;background:none;border:1px dashed var(--border);color:var(--muted);
+  padding:9px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;margin-top:6px
+}
+.chip-add:active{border-color:var(--accent);color:var(--accent)}
+
+.toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  background:var(--accent);color:#070B14;padding:10px 20px;border-radius:20px;
+  font-size:13px;font-weight:700;z-index:200;opacity:0;transition:opacity .3s;
+  pointer-events:none;white-space:nowrap
+}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="page">
+  <div class="page-head">
+    <div class="page-title">Investor Card · Playground</div>
+    <div class="page-sub" id="pageSub">Tweak the card</div>
+  </div>
+
+  <div class="poke-stage">
+    <div class="poke-card" id="card" style="--c1:#3B82F6;--c2:#A78BFA">
+      <div class="poke-inner">
+        <div class="poke-head">
+          <div class="poke-name" id="cName">Aria Holdings</div>
+          <div class="poke-hp">
+            <span class="hp-num" id="cHp">3</span>
+            villas / HP
+          </div>
+        </div>
+        <div class="poke-portrait" id="cPortrait">🐉</div>
+        <div class="poke-stats">
+          <div class="poke-stat">
+            <div class="poke-stat-lbl">Villas</div>
+            <div class="poke-stat-val" id="cVillas">3</div>
+          </div>
+          <div class="poke-stat">
+            <div class="poke-stat-lbl">Contract</div>
+            <div class="poke-stat-val" id="cContract">$4.35M</div>
+          </div>
+        </div>
+        <div class="poke-breakdown-title">Cluster breakdown</div>
+        <div class="poke-breakdown" id="cChips"></div>
+        <div class="poke-foot">
+          <span class="poke-edition" id="cEdition">#ARIA · 1ED</span>
+          <span>Holographic</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IDENTITY -->
+  <div class="panel">
+    <div class="panel-title"><span>Identity</span><button class="reset" onclick="resetAll()">Reset</button></div>
+    <div class="field">
+      <label class="field-lbl">Investor name</label>
+      <input class="field-input" id="iName" placeholder="e.g. Aria Holdings"/>
+    </div>
+    <div class="field">
+      <label class="field-lbl">Edition tag</label>
+      <input class="field-input mono" id="iEdition" placeholder="e.g. ARIA · 1ED"/>
+    </div>
+  </div>
+
+  <!-- AVATAR + COLOURS -->
+  <div class="panel">
+    <div class="panel-title"><span>Avatar &amp; colour</span></div>
+    <div class="field">
+      <label class="field-lbl">Emoji</label>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+    <div class="field">
+      <label class="field-lbl">Primary colour</label>
+      <div class="swatch-grid" id="colorGrid1"></div>
+    </div>
+    <div class="field">
+      <label class="field-lbl">Secondary colour (gradient)</label>
+      <div class="swatch-grid" id="colorGrid2"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="panel">
+    <div class="panel-title"><span>Stats</span></div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-lbl">Villa count</label>
+        <input class="field-input num" id="iVillas" inputmode="numeric" placeholder="0"/>
+      </div>
+      <div class="field">
+        <label class="field-lbl">Contract amount</label>
+        <input class="field-input num" id="iContract" inputmode="numeric" placeholder="0"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREAKDOWN -->
+  <div class="panel">
+    <div class="panel-title"><span>Cluster breakdown</span></div>
+    <div class="chip-list" id="chipList"></div>
+    <button class="chip-add" onclick="addChip()">＋ Add cluster</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'cf_card_v1';
+
+const COLORS = ['#3B82F6','#00E5A0','#FBBF24','#F472B6','#A78BFA','#22D3EE','#F87171','#34D399',
+                '#FB923C','#818CF8','#EC4899','#10B981','#F59E0B','#06B6D4','#6366F1','#84CC16'];
+const EMOJIS = ['🐉','🦊','🦁','🐯','🦅','🐻','🦄','👑','⚡','🔥','🌊','🌟','💎','🎯','🚀','🦈'];
+
+const seed = () => ({
+  name:'Aria Holdings',
+  edition:'ARIA · 1ED',
+  emoji:'🐉',
+  c1:'#3B82F6',
+  c2:'#A78BFA',
+  villas:3,
+  contract:4350000,
+  chips:[
+    {name:'Greek Water',count:2},
+    {name:'Soho',count:1},
+  ]
+});
+
+let state = (()=>{
+  try{const raw = localStorage.getItem(STORAGE_KEY); if(raw) return JSON.parse(raw)}catch(e){}
+  return seed();
+})();
+
+const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+const escapeHtml = s => String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+function fmtMoney(n){
+  n = Number(n)||0;
+  if(n>=1_000_000) return '$'+(n/1_000_000).toFixed(n%1_000_000===0?0:2).replace(/\.?0+$/,'')+'M';
+  if(n>=1_000) return '$'+(n/1_000).toFixed(n%1_000===0?0:1).replace(/\.?0+$/,'')+'K';
+  return '$'+n.toLocaleString('en-US');
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1300)}
+
+function renderCard(){
+  document.getElementById('pageSub').textContent = state.name || 'Investor card';
+  const card = document.getElementById('card');
+  card.style.setProperty('--c1', state.c1);
+  card.style.setProperty('--c2', state.c2);
+  document.getElementById('cName').textContent = state.name || '—';
+  document.getElementById('cHp').textContent = state.villas;
+  document.getElementById('cVillas').textContent = state.villas;
+  document.getElementById('cContract').textContent = fmtMoney(state.contract);
+  document.getElementById('cPortrait').textContent = state.emoji;
+  document.getElementById('cEdition').textContent = '#'+(state.edition||'').toUpperCase();
+  const chipBox = document.getElementById('cChips');
+  if(!state.chips.length){
+    chipBox.innerHTML = `<span class="poke-chip empty">No clusters yet</span>`;
+  }else{
+    chipBox.innerHTML = state.chips.map(ch=>`<span class="poke-chip">${escapeHtml(ch.name||'—')}<b>${ch.count||0}</b></span>`).join('');
+  }
+}
+
+function renderInputs(){
+  document.getElementById('iName').value = state.name;
+  document.getElementById('iEdition').value = state.edition;
+  document.getElementById('iVillas').value = state.villas;
+  document.getElementById('iContract').value = state.contract;
+
+  document.getElementById('emojiGrid').innerHTML = EMOJIS.map(e=>
+    `<div class="emoji-pick ${state.emoji===e?'selected':''}" onclick="pickEmoji('${e}')">${e}</div>`
+  ).join('');
+
+  document.getElementById('colorGrid1').innerHTML = COLORS.map(c=>
+    `<div class="swatch ${state.c1===c?'selected':''}" style="background:${c}" onclick="pickColor(1,'${c}')"></div>`
+  ).join('');
+  document.getElementById('colorGrid2').innerHTML = COLORS.map(c=>
+    `<div class="swatch ${state.c2===c?'selected':''}" style="background:${c}" onclick="pickColor(2,'${c}')"></div>`
+  ).join('');
+
+  document.getElementById('chipList').innerHTML = state.chips.map((ch,i)=>`
+    <div class="chip-row">
+      <input class="field-input" data-i="${i}" data-k="name" value="${escapeHtml(ch.name)}" placeholder="Cluster name"/>
+      <input class="field-input num count" data-i="${i}" data-k="count" inputmode="numeric" value="${ch.count}" placeholder="0"/>
+      <button class="chip-del" onclick="delChip(${i})">✕</button>
+    </div>
+  `).join('');
+  document.querySelectorAll('#chipList input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const i = +e.target.dataset.i, k = e.target.dataset.k;
+      if(k==='count') state.chips[i].count = parseInt(e.target.value)||0;
+      else state.chips[i].name = e.target.value;
+      save(); renderCard();
+    });
+  });
+}
+
+function pickEmoji(e){state.emoji=e;save();renderCard();renderInputs()}
+function pickColor(slot,c){state[slot===1?'c1':'c2']=c;save();renderCard();renderInputs()}
+function addChip(){state.chips.push({name:'',count:0});save();renderInputs();renderCard()}
+function delChip(i){state.chips.splice(i,1);save();renderInputs();renderCard()}
+
+function bindIdentity(){
+  document.getElementById('iName').addEventListener('input',e=>{state.name=e.target.value;save();renderCard()});
+  document.getElementById('iEdition').addEventListener('input',e=>{state.edition=e.target.value;save();renderCard()});
+  document.getElementById('iVillas').addEventListener('input',e=>{state.villas=parseInt(e.target.value)||0;save();renderCard()});
+  document.getElementById('iContract').addEventListener('input',e=>{
+    const v = parseFloat(String(e.target.value).replace(/[^0-9.]/g,''))||0;
+    state.contract = v; save(); renderCard();
+  });
+}
+
+function resetAll(){
+  if(!confirm('Reset card to defaults?')) return;
+  state = seed(); save(); renderCard(); renderInputs(); toast('Reset')
+}
+
+renderCard();
+renderInputs();
+bindIdentity();
+</script>
+</body>
+</html>
