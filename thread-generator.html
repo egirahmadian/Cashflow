@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Deal Teardown — X thread generator</title>
+<style>
+  :root{
+    --bg:#0a0e0c; --fg:#eaf0e8; --muted:#9aa89e; --card:#111714;
+    --border:#1f2a23; --accent:#5cffa1; --accent2:#ffb84d;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px}
+  h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:24px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+  h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;letter-spacing:.04em;text-transform:uppercase}
+  input,select,textarea{
+    width:100%;background:#0c1310;color:var(--fg);
+    border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;font:inherit;outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,255,161,.12)}
+  textarea{min-height:70px;resize:vertical;font-family:inherit}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .tweet{
+    background:#0c1310;border:1px solid var(--border);border-radius:14px;
+    padding:14px 16px;margin-bottom:10px;white-space:pre-wrap;font-size:14px;line-height:1.5;
+    position:relative;
+  }
+  .tweet .num{
+    position:absolute;top:10px;right:12px;font-size:11px;color:var(--muted);
+    letter-spacing:.08em;text-transform:uppercase;
+  }
+  .tweet .count{
+    position:absolute;bottom:8px;right:12px;font-size:11px;color:var(--muted);
+  }
+  .tweet.over .count{color:#ff7a7a}
+  .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  button{
+    background:var(--accent);color:#0a0e0c;border:0;border-radius:10px;
+    padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px;
+  }
+  button.secondary{background:#1a2620;color:var(--fg);border:1px solid var(--border)}
+  button:active{transform:translateY(1px)}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px}
+  .pill{
+    display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    padding:2px 7px;border-radius:999px;background:#152019;color:var(--accent);
+    border:1px solid #1f2e25;margin-left:6px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Deal Teardown <span class="pill">X thread generator</span></h1>
+  <div class="sub">Fill the deal numbers. Generates a 7-tweet thread in the format currently working for property accounts on X.</div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Deal inputs</h2>
+
+      <label>Property type / location</label>
+      <input id="kind" placeholder="2-bed terrace, Sheffield S6" />
+
+      <label>The hook (one specific surprising number)</label>
+      <input id="hook" placeholder="Bought for £92k. Refinanced at £168k. All money out in 7 months." />
+
+      <div class="row3">
+        <div><label>Purchase</label><input id="purchase" placeholder="92000" type="number" /></div>
+        <div><label>Refurb</label><input id="refurb" placeholder="34000" type="number" /></div>
+        <div><label>Other costs</label><input id="other" placeholder="8000" type="number" /></div>
+      </div>
+      <div class="row3">
+        <div><label>End value</label><input id="gdv" placeholder="168000" type="number" /></div>
+        <div><label>Refi LTV %</label><input id="ltv" placeholder="75" type="number" /></div>
+        <div><label>Monthly rent</label><input id="rent" placeholder="950" type="number" /></div>
+      </div>
+      <div class="row">
+        <div><label>Currency</label>
+          <select id="cur">
+            <option>£</option><option>$</option><option>€</option><option>A$</option><option>C$</option>
+          </select>
+        </div>
+        <div><label>Strategy</label>
+          <select id="strategy">
+            <option>BRRR (Buy, Refurb, Refi, Rent)</option>
+            <option>Flip</option>
+            <option>HMO conversion</option>
+            <option>Commercial → resi conversion</option>
+            <option>New build</option>
+            <option>Buy &amp; hold</option>
+          </select>
+        </div>
+      </div>
+
+      <label>How you found it (one line)</label>
+      <input id="source" placeholder="Tired landlord. Letter from a BatchLeads list of 5+ year owners." />
+
+      <label>The biggest unlock / lesson (one line)</label>
+      <input id="lesson" placeholder="Stop offering on Rightmove. The deals are with owners not actively selling." />
+
+      <label>Photo / before-after callout (text describing image you'll attach)</label>
+      <input id="photo" placeholder="Before/after of the kitchen and the spreadsheet screenshot" />
+
+      <label>CTA — your bio link</label>
+      <input id="bio" value="link in bio →" />
+
+      <div class="actions">
+        <button onclick="gen()">Generate thread</button>
+        <button class="secondary" onclick="example()">Load example</button>
+      </div>
+      <div class="hint">Tip: in the live thread, put the affiliate link in your bio (not in the tweet). X throttles outbound links.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Draft thread</h2>
+      <div id="out"></div>
+      <div class="actions">
+        <button onclick="copyAll()">Copy all</button>
+        <button class="secondary" onclick="gen()">Regenerate</button>
+      </div>
+      <div class="hint" id="totals"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = (cur, n) => cur + Number(n||0).toLocaleString(undefined, {maximumFractionDigits:0});
+
+function example(){
+  $('kind').value = '2-bed terrace, Sheffield S6';
+  $('hook').value = 'Bought for £92k. Refinanced at £168k. All money out in 7 months.';
+  $('purchase').value = 92000;
+  $('refurb').value = 34000;
+  $('other').value = 8000;
+  $('gdv').value = 168000;
+  $('ltv').value = 75;
+  $('rent').value = 950;
+  $('source').value = 'Tired landlord. Letter from a BatchLeads list of 5+ year owners.';
+  $('lesson').value = 'Stop offering on Rightmove. The deals are with owners not actively selling.';
+  $('photo').value = 'Before/after of the kitchen + the underwriting spreadsheet';
+  gen();
+}
+
+function gen(){
+  const cur = $('cur').value;
+  const kind = $('kind').value.trim() || '[property]';
+  const hook = $('hook').value.trim() || '[one specific surprising number]';
+  const p = +$('purchase').value || 0;
+  const r = +$('refurb').value || 0;
+  const o = +$('other').value || 0;
+  const gdv = +$('gdv').value || 0;
+  const ltv = +$('ltv').value || 0;
+  const rent = +$('rent').value || 0;
+  const strategy = $('strategy').value;
+  const source = $('source').value.trim() || '[how you found it]';
+  const lesson = $('lesson').value.trim() || '[the lesson]';
+  const photo = $('photo').value.trim();
+  const bio = $('bio').value.trim() || 'link in bio →';
+
+  const allIn = p + r + o;
+  const refi = Math.round(gdv * ltv / 100);
+  const leftIn = allIn - refi;
+  const equityCreated = gdv - allIn;
+  const yieldOnAllIn = allIn ? ((rent * 12) / allIn * 100).toFixed(1) : '0.0';
+
+  const tweets = [];
+
+  // 1 — Hook
+  tweets.push(
+`${hook}
+
+Full teardown of the deal ↓` + (photo ? `\n\n[attach: ${photo}]` : '')
+  );
+
+  // 2 — The property
+  tweets.push(
+`1/ The property
+
+${kind}.
+Strategy: ${strategy}.
+Found via: ${source}`
+  );
+
+  // 3 — The numbers
+  tweets.push(
+`2/ The numbers
+
+Purchase:  ${fmt(cur,p)}
+Refurb:    ${fmt(cur,r)}
+Other:     ${fmt(cur,o)}
+─────────────
+All-in:    ${fmt(cur,allIn)}
+
+End value: ${fmt(cur,gdv)}
+Equity created: ${fmt(cur,equityCreated)}`
+  );
+
+  // 4 — The refinance / exit
+  tweets.push(
+`3/ The exit
+
+Refi at ${ltv}% LTV → pulled out ${fmt(cur,refi)}.
+Left in the deal: ${fmt(cur,leftIn)}.
+Rent: ${fmt(cur,rent)}/mo → ${yieldOnAllIn}% yield on all-in.`
+  );
+
+  // 5 — What I'd do differently
+  tweets.push(
+`4/ What almost broke it
+
+The refurb ran over. Always does.
+Next time: 15% contingency on top of the builder's quote, not in it.`
+  );
+
+  // 6 — The lesson
+  tweets.push(
+`5/ The unlock
+
+${lesson}`
+  );
+
+  // 7 — CTA
+  tweets.push(
+`6/ If you want the full spreadsheet for this deal — underwriting model, refurb schedule, refi timeline — I drop them every week.
+
+${bio}`
+  );
+
+  render(tweets);
+}
+
+function render(tweets){
+  const out = $('out');
+  out.innerHTML = '';
+  let total = 0, over = 0;
+  tweets.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'tweet' + (t.length > 280 ? ' over' : '');
+    div.dataset.idx = i;
+    div.innerHTML =
+      '<div class="num">'+ (i===0 ? 'HOOK' : (i)+'/'+(tweets.length-1)) +'</div>' +
+      escapeHtml(t) +
+      '<div class="count">' + t.length + '/280</div>';
+    out.appendChild(div);
+    total += t.length;
+    if (t.length > 280) over++;
+  });
+  $('totals').textContent = tweets.length + ' tweets · ' + total + ' chars total' + (over ? ' · ⚠ ' + over + ' over 280' : '');
+  window._tweets = tweets;
+}
+
+function escapeHtml(s){return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+function copyAll(){
+  if (!window._tweets) return;
+  const text = window._tweets.map((t,i) => (i===0 ? '' : (i)+'/ ') + (i===0 ? t : t.replace(/^\d+\/\s*/, ''))).join('\n\n---\n\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = event.target; const old = btn.textContent; btn.textContent='Copied ✓';
+    setTimeout(()=>btn.textContent=old, 1200);
+  });
+}
+
+example();
+</script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Property dev, played like a game — the stack I use</title>
+<meta name="description" content="Real-life property development, gamified. The exact tools I use to find, fund, build and sell deals — with the receipts." />
+<meta property="og:title" content="Property dev, played like a game" />
+<meta property="og:description" content="Real numbers. Real deals. The stack I actually use." />
+<meta property="og:type" content="website" />
+<style>
+  :root{
+    --bg:#0a0e0c; --fg:#eaf0e8; --muted:#9aa89e; --card:#111714;
+    --border:#1f2a23; --accent:#5cffa1; --accent2:#ffb84d; --xp:#22d3ee;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:640px;margin:0 auto;padding:48px 20px 96px}
+  header{text-align:center;margin-bottom:8px}
+  .avatar{
+    width:96px;height:96px;border-radius:22px;
+    background:
+      radial-gradient(circle at 30% 30%, #ffe27a 0 14%, transparent 15%),
+      linear-gradient(135deg,var(--accent),var(--accent2));
+    margin:0 auto 14px;display:grid;place-items:center;font-size:34px;font-weight:800;color:#0a0e0c;
+    box-shadow:0 8px 28px rgba(92,255,161,.15);
+  }
+  h1{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}
+  .handle{color:var(--muted);font-size:14px;margin-bottom:14px}
+  .bio{color:var(--fg);font-size:15px;max-width:480px;margin:0 auto;line-height:1.55}
+  .bio b{color:#fff}
+
+  .stats{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+    margin:22px auto 6px;max-width:480px;
+  }
+  .stat{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:10px 8px;text-align:center;
+  }
+  .stat .v{font-weight:700;font-size:15px;color:#fff}
+  .stat .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+  .xpbar{
+    max-width:480px;margin:14px auto 0;height:10px;border-radius:999px;
+    background:#0f1612;border:1px solid var(--border);overflow:hidden;position:relative;
+  }
+  .xpbar > span{
+    display:block;height:100%;width:34%;
+    background:linear-gradient(90deg,var(--xp),var(--accent));
+    box-shadow:0 0 12px rgba(34,211,238,.5);
+  }
+  .xplabel{display:flex;justify-content:space-between;max-width:480px;margin:6px auto 0;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+
+  section{margin-top:30px}
+  h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600}
+  .links{display:flex;flex-direction:column;gap:10px}
+  .link{
+    display:flex;align-items:center;gap:14px;
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:14px 16px;transition:transform .08s ease, border-color .15s ease, background .15s ease;
+  }
+  .link:hover{transform:translateY(-1px);border-color:#2d4034;background:#131c17}
+  .icon{
+    flex:0 0 40px;height:40px;border-radius:10px;
+    display:grid;place-items:center;font-size:16px;font-weight:800;
+    background:linear-gradient(135deg,#1c2620,#2a3a30);color:#fff;
+  }
+  .meta{flex:1;min-width:0}
+  .title{font-weight:600;font-size:15px}
+  .sub{color:var(--muted);font-size:13px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tag{
+    font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 7px;border-radius:999px;background:#152019;color:var(--accent);
+    border:1px solid #1f2e25;flex:0 0 auto;
+  }
+  .tag.hot{color:var(--accent2);border-color:#3a2e1a;background:#231a0e}
+  .tag.boss{color:#ff7a7a;border-color:#3a1f1f;background:#231010}
+  footer{margin-top:48px;text-align:center;color:var(--muted);font-size:12px}
+  footer a{color:var(--muted);border-bottom:1px dashed #2a3a30}
+  .disclosure{margin-top:14px;font-size:11px;color:#6b7d72;max-width:480px;margin-left:auto;margin-right:auto;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="avatar" aria-hidden="true">★</div>
+    <h1>Property dev, played like a game</h1>
+    <div class="handle">@your_handle_on_x</div>
+    <p class="bio">
+      Real-life <b>Sim City</b>, with real numbers. I find, fund, build and sell properties —
+      and post every deal as a level. Below: the <b>exact stack</b> I run.
+    </p>
+  </header>
+
+  <div class="stats" aria-label="Career stats">
+    <div class="stat"><div class="v">17</div><div class="k">Deals</div></div>
+    <div class="stat"><div class="v">£2.4m</div><div class="k">GDV shipped</div></div>
+    <div class="stat"><div class="v">Lvl 6</div><div class="k">Developer</div></div>
+  </div>
+  <div class="xpbar"><span></span></div>
+  <div class="xplabel"><span>XP to Lvl 7</span><span>34%</span></div>
+
+  <section>
+    <h2>Find deals — recon tools</h2>
+    <div class="links">
+      <a class="link" href="https://www.propstream.com/?ref=REPLACE_ME" target="_blank" rel="nofollow sponsored noopener">
+        <div class="icon">PS</div>
+        <div class="meta">
+          <div class="title">PropStream</div>
+          <div class="sub">My main comps + lead-list weapon. Run a market in under 10 min.</div>
+        </div>
+        <span class="tag hot">daily driver</span>
+      </a>
+      <a class="link" href="https://www.dealmachine.com/?ref=REPLACE_ME" target="_blank" rel="nofollow sponsored noopener">
+        <div class="icon">DM</div>
+        <div class="meta">
+          <div class="title">DealMachine</div>
+          <div class="sub">Driving for dollars on the phone — owner lookup + mail in 2 taps.</div>
+        </div>
+        <span class="tag">scout</span>
+      </a>
+      <a class="link" href="https://batchleads.io/?ref=REPLACE_ME" target="_blank" rel="nofollow sponsored noopener">
+        <div class="icon">BL</div>
+        <div class="meta">
+          <div class="title">BatchLeads</div>
+          <div class="sub">Skip tracing + stacked lead lists. Where my best off-market deals come from.</div>
+        </div>
+        <span class="tag">skiptrace</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Run the business — HQ tools</h2>
+    <div class="links">
+      <a class="link" href="https://carrot.com/?aff=REPLACE_ME" target="_blank" rel="nofollow sponsored noopener">
+        <div class="icon">CA</div>
+        <div class="meta">
+          <div class="title">Carrot</div>
+          <div class="sub">Investor websites that actually rank for "sell my house [city]".</div>
+        </div>
+        <span class="tag hot">lead gen</span>
+      </a>
+      <a class="link" href="https://reiblackbook.com/?ref=REPLACE_ME" target="_blank" rel="nofollow sponsored noopener">
+        <div class="icon">BB</div>
+        <div class="meta">
+          <div class="title">REI BlackBook</div>
+          <div class="sub">CRM + dialer + drip — keeps motivated sellers from going cold.</div>
+        </div>
+        <span class="tag">CRM</span>
+      </a>
+      <a class="link" href="https://www.hostinger.com/vps?REFERRALCODE=REPLACE_ME" target="_blank" rel="nofollow sponsored noopener">
+        <div class="icon">HS</div>
+        <div class="meta">
+          <div class="title">Hostinger</div>
+          <div class="sub">Where I host the deal-portfolio site. Cheap, stable, fast to set up.</div>
+        </div>
+        <span class="tag">hosting</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Level up — community + free</h2>
+    <div class="links">
+      <a class="link" href="https://www.skool.com/?ref=REPLACE_ME" target="_blank" rel="nofollow sponsored noopener">
+        <div class="icon">SK</div>
+        <div class="meta">
+          <div class="title">My Skool guild (soon)</div>
+          <div class="sub">Where I post full deal breakdowns + spreadsheets. Members only.</div>
+        </div>
+        <span class="tag boss">guild</span>
+      </a>
+      <a class="link" href="https://x.com/your_handle_on_x" target="_blank" rel="noopener">
+        <div class="icon">X</div>
+        <div class="meta">
+          <div class="title">Follow on X</div>
+          <div class="sub">New deal teardown every week. Real numbers only.</div>
+        </div>
+        <span class="tag">free</span>
+      </a>
+      <a class="link" href="#" id="newsletter-link" target="_blank" rel="noopener">
+        <div class="icon">NL</div>
+        <div class="meta">
+          <div class="title">Newsletter (soon)</div>
+          <div class="sub">One deep deal teardown a week, in your inbox.</div>
+        </div>
+        <span class="tag">free</span>
+      </a>
+    </div>
+  </section>
+
+  <p class="disclosure">
+    Some links above are affiliate links. If you sign up I may earn a commission at no extra cost to you.
+    I only list tools I actually pay for and use to run my deals.
+  </p>
+
+  <footer>
+    <a href="https://x.com/your_handle_on_x">@your_handle_on_x</a>
+  </footer>
+</div>
+</body>
+</html>
